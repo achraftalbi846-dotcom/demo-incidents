@@ -1,0 +1,19 @@
+{
+  "name": "supervision-incidents",
+  "version": "1.0.0",
+  "description": "Mini application de supervision d'incidents — support de démo IA agentique",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "migrate": "node scripts/seed.js --migrate-only",
+    "seed": "node scripts/seed.js",
+    "test": "node --test --test-force-exit tests/*.test.js"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "pg": "^8.16.3"
+  }
+}

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Supervision des incidents</title>
+<style>
+  :root { --orange:#FF7900; --black:#000; --grey:#F5F5F5; --muted:#8F8F8F; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Arial, Helvetica, sans-serif; color:#141414; background:#fff; }
+  header { background:var(--black); color:#fff; padding:22px 32px; display:flex; align-items:center; gap:16px; }
+  header .mark { width:26px; height:26px; background:var(--orange); }
+  header h1 { font-size:20px; margin:0; font-weight:bold; }
+  header span { color:var(--muted); font-size:13px; margin-left:auto; }
+  main { max-width:1000px; margin:0 auto; padding:28px 32px 60px; }
+  .filters { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:22px; }
+  .filters label { font-size:13px; color:var(--muted); margin-right:4px; }
+  select, button { font-family:inherit; font-size:14px; padding:8px 12px; border:1px solid #ccc; background:#fff; cursor:pointer; }
+  button.primary { background:var(--orange); color:#fff; border-color:var(--orange); font-weight:bold; }
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); padding:10px 12px; border-bottom:2px solid var(--black); }
+  td { padding:12px; border-bottom:1px solid #eee; font-size:14px; }
+  tr:hover td { background:var(--grey); }
+  .tag { display:inline-block; padding:3px 9px; font-size:11px; font-weight:bold; letter-spacing:.03em; }
+  .CRITICAL { background:var(--orange); color:#fff; }
+  .MAJOR    { background:#FFD200; color:#000; }
+  .MINOR    { background:#E4E4E4; color:#333; }
+  .OPEN     { background:var(--black); color:#fff; }
+  .ACK      { background:#4BB4E6; color:#fff; }
+  .RESOLVED { background:#50BE87; color:#fff; }
+  .empty { padding:48px 12px; text-align:center; color:var(--muted); font-style:italic; }
+  .pager { display:flex; gap:12px; align-items:center; margin-top:20px; font-size:14px; }
+  .pager .info { color:var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <div class="mark"></div>
+  <h1>Supervision des incidents</h1>
+  <span id="count">—</span>
+</header>
+
+<main>
+  <div class="filters">
+    <label for="severity">Gravité</label>
+    <select id="severity">
+      <option value="">Toutes</option>
+      <option value="critical">Critique</option>
+      <option value="major">Majeure</option>
+      <option value="minor">Mineure</option>
+    </select>
+
+    <label for="status">Statut</label>
+    <select id="status">
+      <option value="">Tous</option>
+      <option value="OPEN">Ouvert</option>
+      <option value="ACK">Pris en compte</option>
+      <option value="RESOLVED">Résolu</option>
+    </select>
+
+    <button class="primary" id="apply">Filtrer</button>
+    <button id="reset">Réinitialiser</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>#</th><th>Titre</th><th>Service</th><th>Gravité</th><th>Statut</th><th>Créé le</th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div class="empty" id="empty" hidden>Aucun incident ne correspond à ces critères.</div>
+
+  <div class="pager">
+    <button id="prev">← Précédent</button>
+    <button id="next">Suivant →</button>
+    <span class="info" id="pageInfo"></span>
+  </div>
+</main>
+
+<script>
+let page = 1;
+const pageSize = 5;
+
+async function load() {
+  const severity = document.getElementById('severity').value;
+  const status = document.getElementById('status').value;
+
+  const params = new URLSearchParams({ page, pageSize });
+  if (severity) params.set('severity', severity);
+  if (status) params.set('status', status);
+
+  const res = await fetch('/api/incidents?' + params);
+  const data = await res.json();
+
+  const tbody = document.getElementById('rows');
+  tbody.innerHTML = '';
+  for (const inc of data.items) {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + inc.id + '</td>' +
+      '<td>' + inc.title + '</td>' +
+      '<td>' + inc.service + '</td>' +
+      '<td><span class="tag ' + inc.severity + '">' + inc.severity + '</span></td>' +
+      '<td><span class="tag ' + inc.status + '">' + inc.status + '</span></td>' +
+      '<td>' + new Date(inc.created_at).toLocaleString('fr-FR') + '</td>';
+    tbody.appendChild(tr);
+  }
+
+  document.getElementById('empty').hidden = data.items.length > 0;
+  document.getElementById('count').textContent = data.total + ' incident(s)';
+  const pages = Math.max(1, Math.ceil(data.total / pageSize));
+  document.getElementById('pageInfo').textContent = 'Page ' + page + ' / ' + pages;
+  document.getElementById('prev').disabled = page <= 1;
+  document.getElementById('next').disabled = page >= pages;
+}
+
+document.getElementById('apply').onclick = () => { page = 1; load(); };
+document.getElementById('reset').onclick = () => {
+  document.getElementById('severity').value = '';
+  document.getElementById('status').value = '';
+  page = 1; load();
+};
+document.getElementById('prev').onclick = () => { if (page > 1) { page--; load(); } };
+document.getElementById('next').onclick = () => { page++; load(); };
+
+load();
+</script>
+</body>
+</html>

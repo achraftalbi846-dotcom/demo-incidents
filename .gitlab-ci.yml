@@ -1,0 +1,27 @@
+stages:
+  - test
+
+variables:
+  POSTGRES_DB: incidents_test
+  POSTGRES_USER: demo
+  POSTGRES_PASSWORD: demo
+  POSTGRES_HOST_AUTH_METHOD: trust
+  DATABASE_URL: "postgres://demo:demo@postgres:5432/incidents_test"
+
+tests:
+  stage: test
+  image: node:22-alpine
+  services:
+    - name: postgres:16-alpine
+      alias: postgres
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - node_modules/
+  before_script:
+    - npm ci
+    - npm run migrate
+  script:
+    - npm test
