@@ -22,7 +22,7 @@ export async function listIncidents({
   const params = [];
 
   if (severity) {
-    params.push(severity.toUpperCase());
+    params.push(severity);
     conditions.push(`severity = $${params.length}`);
   }
 
@@ -33,7 +33,7 @@ export async function listIncidents({
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-  const offset = (page - 1) * pageSize;
+  const offset = page * pageSize;
 
   params.push(pageSize);
   const limitParam = `$${params.length}`;

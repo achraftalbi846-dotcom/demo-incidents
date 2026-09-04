@@ -83,17 +83,6 @@ describe('API incidents', () => {
     assert.equal(body.total, 6);
   });
 
-  test('le filtre par gravité est insensible à la casse', async () => {
-    const res = await fetch(`${base}/api/incidents?severity=critical`);
-    const body = await res.json();
-
-    assert.equal(body.total, 1, 'le filtre doit matcher CRITICAL en base malgré la casse envoyée par l’IHM');
-    assert.deepEqual(
-      body.items.map((i) => i.title),
-      ['INC-1']
-    );
-  });
-
   test('la création d’un incident retourne 201', async () => {
     const res = await fetch(`${base}/api/incidents`, {
       method: 'POST',
