@@ -23,7 +23,7 @@ export async function listIncidents({
 
   if (severity) {
     params.push(severity);
-    conditions.push(`severity = $${params.length}`);
+    conditions.push(`UPPER(severity) = UPPER($${params.length})`);
   }
 
   if (status) {
@@ -33,7 +33,7 @@ export async function listIncidents({
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-  const offset = page * pageSize;
+  const offset = (page - 1) * pageSize;
 
   params.push(pageSize);
   const limitParam = `$${params.length}`;
